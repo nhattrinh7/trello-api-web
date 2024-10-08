@@ -1,0 +1,13 @@
+{
+  "name": "trello-api-tqd",
+  "type": "module",
+  "version": "1.0.0",
+  "description": "nhatrinh Trello api",
+  "main": "src/server.js",
+  "author": "NhatTrinh",
+  "license": "MIT",
+  "private": true,
+  "dependencies": {
+    "express": "^4.18.2"
+  }
+}
