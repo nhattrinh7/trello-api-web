@@ -1,4 +1,6 @@
 import Joi from 'joi'
+import { ObjectId } from 'mongodb'
+import { GET_DB } from '~/config/mongodb'
 import { OBJECT_ID_RULE, OBJECT_ID_RULE_MESSAGE } from '~/utils/validators'
 
 // Define Collection (name & schema)
@@ -8,7 +10,7 @@ const BOARD_COLLECTION_SCHEMA = Joi.object({
   slug: Joi.string().required().min(3).trim().strict(),
   description: Joi.string().required().min(3).max(256).trim().strict(),
 
-  // Lưu ý các item trong mảng columnOrderIds là ObjectId nên cần thêm pattern cho chuẩn nhé, (lúc quay video số 57 mình quên nhưng sang đầu video số 58 sẽ có nhắc lại về cái này.)
+  // Lưu ý các item trong mảng columnOrderIds là ObjectId nên cần thêm pattern cho chuẩn nhé
   columnOrderIds: Joi.array().items(
     Joi.string().pattern(OBJECT_ID_RULE).message(OBJECT_ID_RULE_MESSAGE)
   ).default([]),
@@ -18,7 +20,33 @@ const BOARD_COLLECTION_SCHEMA = Joi.object({
   _destroy: Joi.boolean().default(false)
 })
 
+// validateBeforeCreate chỉ sử dụng trong Model thôi (createNew)
+const validateBeforeCreate = async (data) => {
+  return await BOARD_COLLECTION_SCHEMA.validateAsync(data, { abortEarly: false })
+}
+
+const createNew = async (data) => {
+  try {
+    const validData = await validateBeforeCreate(data)
+
+    const createdBoard = await GET_DB().collection(BOARD_COLLECTION_NAME).insertOne(validData)
+    return createdBoard
+  } catch (error) { throw new Error(error) } // Sâu đến tầng Model rồi thì nếu có lỗi cũng là lỗi hệ thống thôi, ko cần bắt ApiError làm gì
+}
+
+// insert xong có thể cần hàm này để trả dữ liệu của board vừa insert về client
+const findOneById = async (id) => {
+  try {
+    const result = await GET_DB().collection(BOARD_COLLECTION_NAME).findOne({
+      _id: new ObjectId(String(id))
+    })
+    return result
+  } catch (error) { throw new Error(error) }
+}
+
 export const boardModel = {
   BOARD_COLLECTION_NAME,
-  BOARD_COLLECTION_SCHEMA
+  BOARD_COLLECTION_SCHEMA,
+  createNew,
+  findOneById
 }
