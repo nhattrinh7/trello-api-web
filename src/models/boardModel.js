@@ -35,8 +35,20 @@ const createNew = async (data) => {
 }
 
 // insert xong có thể cần hàm này để trả dữ liệu của board vừa insert về client
+// chỉ lấy dữ liệu board mà thôi, ko lấy dữ liệu Columns và Cards
 const findOneById = async (id) => {
   try {
+    const result = await GET_DB().collection(BOARD_COLLECTION_NAME).findOne({
+      _id: new ObjectId(String(id))
+    })
+    return result
+  } catch (error) { throw new Error(error) }
+}
+
+// query tổng hợp để lấy toàn bộ các Columns và Cards thuộc Board
+const getDetails = async (id) => {
+  try {
+    // hôm nay tạm thời giống findOneById, sau sẽ update phần aggregate
     const result = await GET_DB().collection(BOARD_COLLECTION_NAME).findOne({
       _id: new ObjectId(String(id))
     })
@@ -48,5 +60,6 @@ export const boardModel = {
   BOARD_COLLECTION_NAME,
   BOARD_COLLECTION_SCHEMA,
   createNew,
-  findOneById
+  findOneById,
+  getDetails
 }

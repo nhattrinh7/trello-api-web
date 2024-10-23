@@ -29,7 +29,6 @@ const createNew = async (req, res, next) => {
 
   try {
     // console.log(req.body)
-
     await correctCondition.validateAsync(req.body, { abortEarly: false }) // để nếu có nhiều lỗi thì sẽ trả về tất cả, không trả về chỉ 1 cái 1
     next()
 
