@@ -7,6 +7,7 @@
 import Joi from 'joi'
 import { StatusCodes } from 'http-status-codes'
 import ApiError from '~/utils/ApiError'
+import { BOARD_TYPES } from '~/utils/constants'
 
 const createNew = async (req, res, next) => {
   /**
@@ -24,7 +25,8 @@ const createNew = async (req, res, next) => {
       'string.max': 'Title max 50 chars',
       'string.trim': 'Title must not have leading and trailing whitespaces'
     }),
-    description: Joi.string().required().min(3).max(256).trim().strict()
+    description: Joi.string().required().min(3).max(256).trim().strict(),
+    type: Joi.string().valid(...Object.values(BOARD_TYPES)).required() // sau này khi người dùng đẩy lên, cho người dùng chọn public hoặc private
   })
 
   try {

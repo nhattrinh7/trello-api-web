@@ -1,4 +1,6 @@
 import express from 'express'
+import cors from 'cors'
+import { corsOptions } from '~/config/cors'
 import exitHook from 'async-exit-hook'
 import { CONNECT_DB, CLOSE_DB } from './config/mongodb'
 import { env } from '~/config/environment'
@@ -8,6 +10,9 @@ import { errorHandlingMiddleware } from './middlewares/errorHandlingMiddleware'
 const START_SERVER = () => {
 
   const app = express()
+
+  // xử lí Cors
+  app.use(cors(corsOptions))
 
   // middleware dùng để parse dữ liệu JSON ra được vd từ req.body
   app.use(express.json())

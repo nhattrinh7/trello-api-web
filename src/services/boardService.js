@@ -1,14 +1,11 @@
 /* eslint-disable no-useless-catch */
-/**
- * Updated by trungquandev.com's author on August 17 2023
- * YouTube: https://youtube.com/@trungquandev
- * "A bit of fragrance clings to the hand that gives flowers!"
- */
+
 
 import { slugify } from '~/utils/formatters'
 import { boardModel } from '~/models/boardModel'
 import ApiError from '~/utils/ApiError'
 import { StatusCodes } from 'http-status-codes'
+import { cloneDeep } from 'lodash'
 
 const createNew = async (reqBody) => {
   try {
@@ -39,8 +36,22 @@ const getDetails = async (boardId) => {
       throw new ApiError(StatusCodes.NOT_FOUND, 'Board not found!')
     }
 
+    // tùy mục đích cần cloneDeep hay không, trong trường hợp này ko muốn ảnh hưởng đến dữ liệu ban đầu
+    // dữ liệu cards đang cùng cấp với columns, không embeded như FE nên giờ embed cards vào trong columns
+    // Bước 1:
+    const resBoard = cloneDeep(board)
+
+    //Bước 2: Cần toString(vì nếu ko toString thì là đang so sánh 2 cái ObjectId với nhau thì ko so được)
+    resBoard.columns.forEach(column => {
+      column.cards = resBoard.cards.filter(card => card.columnId.equals(column._id)) // cách này ko cần toString thì MongoDB support equals (equals của MongoDB còn toString là của Javascript)
+      // column.cards = resBoard.cards.filter(card => card.columnId.toString() === column._id.toString())
+    })
+
+    // Bước 3: embeb xong rồi thì xóa cards thừa (cái mà song song với columns)
+    delete resBoard.cards
+
     // Phải có return
-    return board
+    return resBoard
   } catch (error) { throw error }
 }
 
