@@ -35,7 +35,7 @@ const createNew = async (data) => {
 
     const createdBoard = await GET_DB().collection(BOARD_COLLECTION_NAME).insertOne(validData)
     return createdBoard
-  } catch (error) { throw new Error(error) } // Sâu đến tầng Model rồi thì nếu có lỗi cũng là lỗi hệ thống thôi, ko cần bắt ApiError làm gì
+  } catch (error) { throw new Error(error) }
 }
 
 // insert xong có thể cần hàm này để trả dữ liệu của board vừa insert về client
@@ -52,7 +52,6 @@ const findOneById = async (id) => {
 // query tổng hợp để lấy toàn bộ các Columns và Cards thuộc Board
 const getDetails = async (id) => {
   try {
-    // hôm nay tạm thời giống findOneById, sau sẽ update phần aggregate
     // const result = await GET_DB().collection(BOARD_COLLECTION_NAME).findOne({ _id: new ObjectId(String(id)) })
     const result = await GET_DB().collection(BOARD_COLLECTION_NAME).aggregate([
       { $match: {

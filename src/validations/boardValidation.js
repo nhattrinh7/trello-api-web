@@ -1,9 +1,3 @@
-/**
- * Updated by trungquandev.com's author on August 17 2023
- * YouTube: https://youtube.com/@trungquandev
- * "A bit of fragrance clings to the hand that gives flowers!"
- * Validate dữ liệu từ FE gửi lên
- */
 import Joi from 'joi'
 import { StatusCodes } from 'http-status-codes'
 import ApiError from '~/utils/ApiError'
@@ -15,7 +9,7 @@ const createNew = async (req, res, next) => {
    * BE chỉ cần validate đảm bảo dữ liệu chuẩn xác và trả về message mặc định từ thư viện là được
    *** QUAN TRỌNG: việc validate dữ liệu ở BE là BẮT BUỘC vì đây là điểm cuối lưu dữ liệu vào database, dữ liệu sai
    * cái thì dở hơi
-   * Và thông thường tron thực tế, điều tốt nhất cho hệ thống là hãy luôn validate dữ liệu ở cả BE và FE
+   * Và thông thường trong thực tế, điều tốt nhất cho hệ thống là hãy luôn validate dữ liệu ở cả BE và FE
    */
   const correctCondition = Joi.object({
     title: Joi.string().required().min(3).max(50).trim().strict().messages({ //trim() phải đi kèm strict() mới trim được
