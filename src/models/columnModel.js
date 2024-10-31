@@ -26,9 +26,13 @@ const validateBeforeCreate = async (data) => {
 const createNew = async (data) => {
   try {
     const validData = await validateBeforeCreate(data)
-
-    const createdBoard = await GET_DB().collection(COLUMN_COLLECTION_NAME).insertOne(validData)
-    return createdBoard
+    // validData chứa boardId dạng String, mình lưu vào DB cần dạng ObjectId nên thêm 1 bước newColumnToAdd này
+    const newColumnToAdd = {
+      ...validData,
+      boardId: new ObjectId(String(validData.boardId)) // ở đây là ghi đè thôi
+    }
+    const createdColumn = await GET_DB().collection(COLUMN_COLLECTION_NAME).insertOne(newColumnToAdd)
+    return createdColumn
   } catch (error) { throw new Error(error) }
 }
 
@@ -36,10 +40,21 @@ const createNew = async (data) => {
 // chỉ lấy dữ liệu board mà thôi, ko lấy dữ liệu Columns và Cards
 const findOneById = async (id) => {
   try {
-    const result = await GET_DB().collection(COLUMN_COLLECTION_NAME).findOne({
-      _id: new ObjectId(String(id))
-    })
+    const result = await GET_DB().collection(COLUMN_COLLECTION_NAME).findOne({ _id: new ObjectId(String(id)) })
     return result
+  } catch (error) { throw new Error(error) }
+}
+
+// nhiệm vụ của function này là push 1 giá trị cardId vào cuối mảng cardOrderIds của column chứa card ấy
+const pushCardOrderIds = async (card) => {
+  try {
+    const result = await GET_DB().collection(COLUMN_COLLECTION_NAME).findOneAndUpdate(
+      { _id: new ObjectId(String(card.columnId)) },
+      { $push: { cardOrderIds: new ObjectId(String(card._id)) } },
+      { ReturnDocument: 'after' }
+    )
+
+    return result.value
   } catch (error) { throw new Error(error) }
 }
 
@@ -47,5 +62,6 @@ export const columnModel = {
   COLUMN_COLLECTION_NAME,
   COLUMN_COLLECTION_SCHEMA,
   createNew,
-  findOneById
+  findOneById,
+  pushCardOrderIds
 }

@@ -3,7 +3,6 @@ import { boardService } from '~/services/boardService'
 
 const createNew = async (req, res, next) => {
   try {
-    // Điều hướng dữ liệu sang tầng Service
     const createdBoard = await boardService.createNew(req.body)
     // Có kết quả thì trả về phía Client
     res.status(StatusCodes.CREATED).json(createdBoard)
@@ -17,7 +16,7 @@ const createNew = async (req, res, next) => {
 const getDetails = async (req, res, next) => {
   try {
     const boardId = req.params.id //đặt tên cho rõ ràng tí thôi :))
-    // sau học Advanced sẽ có thêm userId để chỉ lấy board thuộc về user đó thôi blabla...
+    // sau tới Advanced sẽ có thêm userId để chỉ lấy board thuộc về user đó thôi blabla...
     const board = await boardService.getDetails(boardId)
     res.status(StatusCodes.OK).json(board)
 

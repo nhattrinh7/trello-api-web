@@ -1,5 +1,5 @@
 import Joi from 'joi'
-import { ObjectId } from 'mongodb'
+import { ObjectId, ReturnDocument } from 'mongodb'
 import { GET_DB } from '~/config/mongodb'
 import { OBJECT_ID_RULE, OBJECT_ID_RULE_MESSAGE } from '~/utils/validators'
 import { BOARD_TYPES } from '~/utils/constants'
@@ -24,6 +24,7 @@ const BOARD_COLLECTION_SCHEMA = Joi.object({
   _destroy: Joi.boolean().default(false)
 })
 
+
 // validateBeforeCreate chỉ sử dụng trong Model thôi (createNew)
 const validateBeforeCreate = async (data) => {
   return await BOARD_COLLECTION_SCHEMA.validateAsync(data, { abortEarly: false })
@@ -32,8 +33,8 @@ const validateBeforeCreate = async (data) => {
 const createNew = async (data) => {
   try {
     const validData = await validateBeforeCreate(data)
-
     const createdBoard = await GET_DB().collection(BOARD_COLLECTION_NAME).insertOne(validData)
+
     return createdBoard
   } catch (error) { throw new Error(error) }
 }
@@ -52,7 +53,6 @@ const findOneById = async (id) => {
 // query tổng hợp để lấy toàn bộ các Columns và Cards thuộc Board
 const getDetails = async (id) => {
   try {
-    // const result = await GET_DB().collection(BOARD_COLLECTION_NAME).findOne({ _id: new ObjectId(String(id)) })
     const result = await GET_DB().collection(BOARD_COLLECTION_NAME).aggregate([
       { $match: {
         _id: new ObjectId(String(id)),
@@ -71,8 +71,22 @@ const getDetails = async (id) => {
         as: 'cards'
       } }
     ]).toArray() // Aggregate trả về dữ liệu, toArray() để biến nó thành dạng mảng
+    console.log(result)
     return result[0] || null // nếu có dữ liệu thì là phần tử đầu tiên của mảng (ở đây ta chỉ lấy 1 cái board) vì ObjectId của board là unique
     // để null thay vì object rỗng {} để nếu ObjectId của Board được truyền vào không đúng, ở Service cái if(!board) vẫn bắt được, {} thì ko bắt được
+  } catch (error) { throw new Error(error) }
+}
+
+// nhiệm vụ của function này là push 1 giá trị columnId vào cuối mảng columnOrderIds
+const pushColumnOrderIds = async (column) => {
+  try {
+    const result = await GET_DB().collection(BOARD_COLLECTION_NAME).findOneAndUpdate(
+      { _id: new ObjectId(String(column.boardId)) }, // <filter>
+      { $push: { columnOrderIds: new ObjectId(String(column._id)) } }, // <update>
+      { ReturnDocument: 'after' } // <options>
+    )
+
+    return result.value || null
   } catch (error) { throw new Error(error) }
 }
 
@@ -81,5 +95,6 @@ export const boardModel = {
   BOARD_COLLECTION_SCHEMA,
   createNew,
   findOneById,
-  getDetails
+  getDetails,
+  pushColumnOrderIds
 }

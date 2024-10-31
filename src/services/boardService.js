@@ -32,18 +32,17 @@ const getDetails = async (boardId) => {
     if (!board) {
       throw new ApiError(StatusCodes.NOT_FOUND, 'Board not found!')
     }
-
-    // tùy mục đích cần cloneDeep hay không, trong trường hợp này ko muốn ảnh hưởng đến dữ liệu ban đầu
-    // dữ liệu cards đang cùng cấp với columns, không embeded như FE nên giờ embed cards vào trong columns
+    // lấy được dữ liệu rồi thì EMBEDED cards vào trong COLUMN
+    // dữ liệu cards đang cùng cấp với columns, đang không embeded như ở FE nên giờ embed cards vào trong columns
     // Bước 1:
     const resBoard = cloneDeep(board)
 
     //Bước 2: Cần toString(vì nếu ko toString thì là đang so sánh 2 cái ObjectId với nhau thì ko so được)
     resBoard.columns.forEach(column => {
-      column.cards = resBoard.cards.filter(card => card.columnId.equals(column._id)) // cách này ko cần toString thì MongoDB support equals (equals của MongoDB còn toString là của Javascript)
+      column.cards = resBoard.cards.filter(card => card.columnId.equals(column._id))
       // column.cards = resBoard.cards.filter(card => card.columnId.toString() === column._id.toString())
     })
-
+    console.log(resBoard)
     // Bước 3: embeb xong rồi thì xóa cards thừa (cái mà song song với columns)
     delete resBoard.cards
 

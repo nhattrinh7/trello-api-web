@@ -14,8 +14,9 @@ const START_SERVER = () => {
   // xử lí Cors
   app.use(cors(corsOptions))
 
-  // middleware dùng để parse dữ liệu JSON ra được vd từ req.body
+  // middleware dùng để parse dữ liệu JSON ra được ví dụ từ req.body, nếu ko req.body sẽ là undefined
   app.use(express.json())
+
 
   app.use('/v1', APIs_V1)
 
