@@ -1,5 +1,5 @@
 import Joi from 'joi'
-import { ObjectId, ReturnDocument } from 'mongodb'
+import { ObjectId } from 'mongodb'
 import { GET_DB } from '~/config/mongodb'
 import { OBJECT_ID_RULE, OBJECT_ID_RULE_MESSAGE } from '~/utils/validators'
 import { BOARD_TYPES } from '~/utils/constants'
@@ -20,10 +20,12 @@ const BOARD_COLLECTION_SCHEMA = Joi.object({
   ).default([]),
 
   createdAt: Joi.date().timestamp('javascript').default(Date.now),
-  updatedAt: Joi.date().timestamp('javascript').default(null),
+  updatedAt: Joi.date().timestamp('javascript').default(null), // chứa thời gian của lần update gần nhất
   _destroy: Joi.boolean().default(false)
 })
 
+// chỉ định các field không cho phép cập nhật trong hàm update
+const INVALID_UPDATE_FIELD = ['_id', 'createdAt']
 
 // validateBeforeCreate chỉ sử dụng trong Model thôi (createNew)
 const validateBeforeCreate = async (data) => {
@@ -71,7 +73,7 @@ const getDetails = async (id) => {
         as: 'cards'
       } }
     ]).toArray() // Aggregate trả về dữ liệu, toArray() để biến nó thành dạng mảng
-    console.log(result)
+    // console.log(result)
     return result[0] || null // nếu có dữ liệu thì là phần tử đầu tiên của mảng (ở đây ta chỉ lấy 1 cái board) vì ObjectId của board là unique
     // để null thay vì object rỗng {} để nếu ObjectId của Board được truyền vào không đúng, ở Service cái if(!board) vẫn bắt được, {} thì ko bắt được
   } catch (error) { throw new Error(error) }
@@ -83,10 +85,46 @@ const pushColumnOrderIds = async (column) => {
     const result = await GET_DB().collection(BOARD_COLLECTION_NAME).findOneAndUpdate(
       { _id: new ObjectId(String(column.boardId)) }, // <filter>
       { $push: { columnOrderIds: new ObjectId(String(column._id)) } }, // <update>
-      { ReturnDocument: 'after' } // <options>
+      { returnDocument: 'after' } // <options>
     )
 
-    return result.value || null
+    return result
+  } catch (error) { throw new Error(error) }
+}
+
+// lấy 1 phần tử columnId ra từ columnOrderIds
+const pullColumnOrderIds = async (column) => {
+  try {
+    const result = await GET_DB().collection(BOARD_COLLECTION_NAME).findOneAndUpdate(
+      { _id: new ObjectId(String(column.boardId)) },
+      { $pull: { columnOrderIds: new ObjectId(String(column._id)) } },
+      { returnDocument: 'after' }
+    )
+
+    return result
+  } catch (error) { throw new Error(error) }
+}
+
+const update = async (boardId, updateData) => {
+  try {
+    Object.keys(updateData).forEach(fieldName => {
+      if (INVALID_UPDATE_FIELD.includes(fieldName)) {
+        delete updateData[fieldName]
+      }
+    })
+
+    // Những dữ liệu lien quan ObjectId thì biến đổi ở đây
+    if (updateData.columnOrderIds) {
+      updateData.columnOrderIds = updateData.columnOrderIds.map(_id => (new ObjectId(String(_id))))
+    }
+
+    const result = await GET_DB().collection(BOARD_COLLECTION_NAME).findOneAndUpdate(
+      { _id: new ObjectId(String(boardId)) },
+      { $set: updateData },
+      { returnDocument: 'after' }
+    )
+
+    return result
   } catch (error) { throw new Error(error) }
 }
 
@@ -96,5 +134,7 @@ export const boardModel = {
   createNew,
   findOneById,
   getDetails,
-  pushColumnOrderIds
+  pushColumnOrderIds,
+  update,
+  pullColumnOrderIds
 }

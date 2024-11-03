@@ -16,6 +16,8 @@ const CARD_COLLECTION_SCHEMA = Joi.object({
   _destroy: Joi.boolean().default(false)
 })
 
+const INVALID_UPDATE_FIELD = ['_id', 'boardId', 'createdAt']
+
 const validateBeforeCreate = async (data) => {
   return await CARD_COLLECTION_SCHEMA.validateAsync(data, { abortEarly: false })
 }
@@ -33,13 +35,44 @@ const createNew = async (data) => {
   } catch (error) { throw new Error(error) }
 }
 
-// insert xong có thể cần hàm này để trả dữ liệu của board vừa insert về client
-// chỉ lấy dữ liệu board mà thôi, ko lấy dữ liệu Columns và Cards
+
 const findOneById = async (id) => {
   try {
     const result = await GET_DB().collection(CARD_COLLECTION_NAME).findOne({
       _id: new ObjectId(String(id))
     })
+
+    return result
+  } catch (error) { throw new Error(error) }
+}
+
+const update = async (cardId, updateData) => {
+  try {
+    Object.keys(updateData).forEach(fieldName => {
+      if (INVALID_UPDATE_FIELD.includes(fieldName)) {
+        delete updateData[fieldName]
+      }
+    })
+
+    // Đối với những dữ liệu liên quan đên ObjectId, cần biến đổi dữ liệu ở đây
+    if (updateData.columnId) updateData.columnId = new ObjectId(String(updateData.columnId))
+
+    const result = await GET_DB().collection(CARD_COLLECTION_NAME).findOneAndUpdate(
+      { _id: new ObjectId(String(cardId)) },
+      { $set: updateData },
+      { returnDocument: 'after' }
+    )
+
+    return result
+  } catch (error) { throw new Error(error) }
+}
+
+const deleteManyByColumnId = async (columnId) => {
+  try {
+    const result = await GET_DB().collection(CARD_COLLECTION_NAME).deleteMany({
+      columnId: new ObjectId(String(columnId))
+    })
+
     return result
   } catch (error) { throw new Error(error) }
 }
@@ -48,5 +81,7 @@ export const cardModel = {
   CARD_COLLECTION_NAME,
   CARD_COLLECTION_SCHEMA,
   createNew,
-  findOneById
+  findOneById,
+  update,
+  deleteManyByColumnId
 }

@@ -17,7 +17,6 @@ const START_SERVER = () => {
   // middleware dùng để parse dữ liệu JSON ra được ví dụ từ req.body, nếu ko req.body sẽ là undefined
   app.use(express.json())
 
-
   app.use('/v1', APIs_V1)
 
   // Middleware xử lí lỗi tập trung

@@ -1,8 +1,11 @@
 import { slugify } from '~/utils/formatters'
 import { boardModel } from '~/models/boardModel'
+import { columnModel } from '~/models/columnModel'
+import { cardModel } from '~/models/cardModel'
 import ApiError from '~/utils/ApiError'
 import { StatusCodes } from 'http-status-codes'
 import { cloneDeep } from 'lodash'
+
 
 const createNew = async (reqBody) => {
   try {
@@ -42,7 +45,7 @@ const getDetails = async (boardId) => {
       column.cards = resBoard.cards.filter(card => card.columnId.equals(column._id))
       // column.cards = resBoard.cards.filter(card => card.columnId.toString() === column._id.toString())
     })
-    console.log(resBoard)
+
     // Bước 3: embeb xong rồi thì xóa cards thừa (cái mà song song với columns)
     delete resBoard.cards
 
@@ -51,7 +54,42 @@ const getDetails = async (boardId) => {
   } catch (error) { throw error }
 }
 
+const update = async (boardId, reqBody) => {
+  try {
+    const updateData = {
+      ...reqBody,
+      updatedAt: Date.now()
+    }
+    const updatedBoard = await boardModel.update(boardId, updateData)
+
+    return updatedBoard
+  } catch (error) { throw error }
+}
+
+const moveCardToDifferentColumn = async (reqBody) => {
+  try {
+    // 1. Xóa id của Card đã kéo ra khỏi cardOrderIds của Column ban đầu
+    await columnModel.update(reqBody.prevColumnId, {
+      cardOrderIds: reqBody.prevCardOrderIds,
+      updatedAt: Date.now()
+    })
+    // 2. Thêm id của Card đã kéo vào cardOrderIds của Column đích
+    await columnModel.update(reqBody.nextColumnId, {
+      cardOrderIds: reqBody.nextCardOrderIds,
+      updatedAt: Date.now()
+    })
+    // 3. Cập nhật columnId của Card đã kéo bằng id của Column đích
+    await cardModel.update(reqBody.currentCardId, {
+      columnId: reqBody.nextColumnId
+    })
+
+    return { updateResult: 'Successfully!' }
+  } catch (error) { throw error }
+}
+
 export const boardService = {
   createNew,
-  getDetails
+  getDetails,
+  update,
+  moveCardToDifferentColumn
 }

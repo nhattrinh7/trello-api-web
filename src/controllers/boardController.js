@@ -20,13 +20,29 @@ const getDetails = async (req, res, next) => {
     const board = await boardService.getDetails(boardId)
     res.status(StatusCodes.OK).json(board)
 
-  } catch (error) {
-    // Những file nào liên kết với Controller mà sảy ra lỗi, chỉ cần throw lỗi, lỗi tập trung ở Controller để đẩy sang Middleware xử lí lỗi
-    next(error)
-  }
+  } catch (error) { next(error) }
+}
+
+const update = async (req, res, next) => {
+  try {
+    const boardId = req.params.id
+    const updatedBoard = await boardService.update(boardId, req.body)
+    res.status(StatusCodes.OK).json(updatedBoard)
+
+  } catch (error) { next(error) }
+}
+
+const moveCardToDifferentColumn = async (req, res, next) => {
+  try {
+    const result = await boardService.moveCardToDifferentColumn(req.body)
+
+    res.status(StatusCodes.OK).json(result)
+  } catch (error) { next(error) }
 }
 
 export const boardController = {
   createNew,
-  getDetails
+  getDetails,
+  update,
+  moveCardToDifferentColumn
 }

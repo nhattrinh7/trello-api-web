@@ -1,5 +1,8 @@
+import { cardModel } from '~/models/cardModel'
 import { columnModel } from '~/models/columnModel'
 import { boardModel } from '~/models/boardModel'
+import { StatusCodes } from 'http-status-codes'
+import ApiError from '~/utils/ApiError'
 
 const createNew = async (reqBody) => {
   try {
@@ -24,6 +27,41 @@ const createNew = async (reqBody) => {
   } catch (error) { throw error }
 }
 
+const update = async (columnId, reqBody) => {
+  try {
+    const updateData = {
+      ...reqBody,
+      updatedAt: Date.now()
+    }
+    const updatedColumn = await columnModel.update(columnId, updateData)
+
+    return updatedColumn
+  } catch (error) { throw error }
+}
+
+const deleteItem = async (columnId) => {
+  try {
+    const targetColumn = await columnModel.findOneById(columnId)
+
+    if (!targetColumn) {
+      throw new ApiError(StatusCodes.NOT_FOUND, 'Column not found!: columnService ~ deleteItem')
+    }
+    // Xóa Column
+    await columnModel.deleteOneById(columnId)
+
+    // Xóa toàn bộ Card của Column
+    await cardModel.deleteManyByColumnId(columnId)
+
+    // Xóa columnId trong columnOrderIds trong Board, nó nhận vào column nên phải từ columnId find ra Column (làm phía trên)
+    await boardModel.pullColumnOrderIds(targetColumn)
+
+    return { deleteResult: 'Column and its Card had been deleted successfully!' } // dòng này hiển thị ra cho người dùng
+  } catch (error) { throw error }
+}
+
+
 export const columnService = {
-  createNew
+  createNew,
+  update,
+  deleteItem
 }

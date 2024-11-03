@@ -11,9 +11,13 @@ Router.route('/')
   })
   .post(boardValidation.createNew, boardController.createNew)
 
-Router.route('/:id') //trong boardRoute thì là board Id
-  // không phải lúc nào cũng cần chạy qua Validation
+Router.route('/:id')
   .get(boardController.getDetails)
-  .put()
+  .put(boardValidation.update, boardController.update)
+
+// API hỗ trợ việc di chuyển Card giữa các Column khác nhau trong 1 Board
+// xử lí 3 hành động khác nhau
+Router.route('/supports/moving_card')
+  .put(boardValidation.moveCardToDifferentColumn, boardController.moveCardToDifferentColumn)
 
 export const boardRoute = Router
