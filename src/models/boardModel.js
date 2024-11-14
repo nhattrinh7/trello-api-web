@@ -25,7 +25,7 @@ const BOARD_COLLECTION_SCHEMA = Joi.object({
 })
 
 // chỉ định các field không cho phép cập nhật trong hàm update
-const INVALID_UPDATE_FIELD = ['_id', 'createdAt']
+const INVALID_UPDATE_FIELDS = ['_id', 'createdAt']
 
 // validateBeforeCreate chỉ sử dụng trong Model thôi (createNew)
 const validateBeforeCreate = async (data) => {
@@ -108,7 +108,7 @@ const pullColumnOrderIds = async (column) => {
 const update = async (boardId, updateData) => {
   try {
     Object.keys(updateData).forEach(fieldName => {
-      if (INVALID_UPDATE_FIELD.includes(fieldName)) {
+      if (INVALID_UPDATE_FIELDS.includes(fieldName)) {
         delete updateData[fieldName]
       }
     })
