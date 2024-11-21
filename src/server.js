@@ -7,6 +7,10 @@ import { env } from '~/config/environment'
 import { APIs_V1 } from '~/routes/v1'
 import { errorHandlingMiddleware } from './middlewares/errorHandlingMiddleware'
 import cookieParser from 'cookie-parser'
+import socketIo from 'socket.io'
+import http from 'http' // 1 thư viện build-in của socket.io
+import { inviteUserToBoardSocket } from './sockets/inviteUserToBoardSocket'
+
 
 const START_SERVER = () => {
 
@@ -18,10 +22,8 @@ const START_SERVER = () => {
     next()
   })
 
-  // Use cookieParser
   app.use(cookieParser())
 
-  // xử lí Cors
   app.use(cors(corsOptions))
 
   // middleware dùng để parse dữ liệu JSON ra được ví dụ từ req.body, nếu ko req.body sẽ là undefined
@@ -29,12 +31,27 @@ const START_SERVER = () => {
 
   app.use('/v1', APIs_V1)
 
-  // Middleware xử lí lỗi tập trung
   app.use(errorHandlingMiddleware)
 
-  app.listen(env.APP_PORT, env.APP_HOST, () => {
-    console.log(`3. ${env.AUTHOR}, Back-end Server is running successfully at http://${ env.APP_HOST }:${ env.APP_PORT }/`)
+  // Tạo 1 cái Server mới bọc thằng app của Express để làm real-time, vì thằng socket.io cần làm việc với http.createServer của nodejs
+  const server = http.createServer(app)
+  // Khởi tạo biến io với server và cors
+  const io = socketIo(server, { cors: corsOptions }) // ở đây là xử lí cors với socket.io ko phải cors để gọi API như ở trên
+
+  io.on('connection', (socket) => { // khi nhận được connect từ client, socket.io ở server sẽ tạo ra biến socket, biến này dùng để quản lí cái kết nối được gửi lên
+    inviteUserToBoardSocket(socket)
   })
+
+  // Dùng server.listen thay vì app.listen vì lúc này server đã bao gồm express app và đã config socket.io
+  if (env.BUILD_MODE === 'production') {
+    server.listen(process.env.PORT, () => { //PORT này hình như khác trong .env, check thử xem
+      console.log(`3. Production: Back-end Server is running successfully at: Port: ${process.env.PORT}`)
+    })
+  } else {
+    server.listen(env.APP_PORT, env.APP_HOST, () => {
+      console.log(`3. LocalDev: Back-end Server is running successfully at http://${ env.APP_HOST }:${ env.APP_PORT }/`)
+    })
+  }
 
   // thằng này chạy windows đang hơi lỗi tí ko exit dc, kệ bà nó exit hay ko ko quan trọng ô tô kê!
   // sau deploy lên máy chủ chạy Linux khả năng là lại ô tô kê ngay ko sau đâu babi <3
