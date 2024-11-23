@@ -180,7 +180,7 @@ const getBoards = async (userId, page, itemsPerPage, queryFilters) => {
     // Xử lý query filter cho từng trường hợp search board, ví dụ search theo title
     if (queryFilters) {
       Object.keys(queryFilters).forEach(key => {
-        // queryFilters[key] ví dụ queryFilters[title] nếu phía FE đẩy lên q[title]
+        // queryFilters[key], ví dụ là queryFilters[title] nếu phía FE đẩy lên q[title]
 
         // Có phân biệt chữ hoa chữ thường
         // queryConditions.push({ [key]: { $regex: queryFilters[key] } })
