@@ -36,11 +36,11 @@ const createNew = async (reqBody) => {
 
     // Gửi Email cho người dùng xác thực tài khoản
     const verificationLink = `${WEBSITE_DOMAIN}/account/verification?email=${getNewUser.email}&token=${getNewUser.verifyToken}`
-    const customSubject = 'Trello MERN Stack Advanced: Please verify your email before using our services!'
+    const customSubject = 'Trello: Please verify your email before using our services!'
     const htmlContent = `
       <h3>Here is your verification link:</h3>
       <h3>${verificationLink}</h3>
-      <h3>Sincerely,<br/> - Trungquandev - Một Lập Trình Viên - </h3>
+      <h3>Sincerely,<br/> - Trello Team - </h3>
     `
     // Gọi tới cái Provider gửi mail
     await BrevoProvider.sendEmail(getNewUser.email, customSubject, htmlContent)

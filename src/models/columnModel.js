@@ -89,6 +89,19 @@ const deleteOneById = async (id) => {
   } catch (error) { throw new Error(error) }
 }
 
+// lấy 1 phần tử cardId ra từ cardOrderIds
+const pullCardOrderIds = async (card) => {
+  try {
+    const result = await GET_DB().collection(COLUMN_COLLECTION_NAME).findOneAndUpdate(
+      { _id: new ObjectId(String(card.columnId)) },
+      { $pull: { cardOrderIds: new ObjectId(String(card._id)) } },
+      { returnDocument: 'after' }
+    )
+
+    return result
+  } catch (error) { throw new Error(error) }
+}
+
 export const columnModel = {
   COLUMN_COLLECTION_NAME,
   COLUMN_COLLECTION_SCHEMA,
@@ -96,5 +109,6 @@ export const columnModel = {
   findOneById,
   pushCardOrderIds,
   update,
-  deleteOneById
+  deleteOneById,
+  pullCardOrderIds
 }
