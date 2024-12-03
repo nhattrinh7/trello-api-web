@@ -1,6 +1,8 @@
 import { cardModel } from '~/models/cardModel'
 import { columnModel } from '~/models/columnModel'
 import { CloudinaryProvider } from '~/providers/CloudinaryProvider'
+import { StatusCodes } from 'http-status-codes'
+import ApiError from '~/utils/ApiError'
 
 
 const createNew = async (reqBody) => {
@@ -57,7 +59,26 @@ const update = async (cardId, reqBody, cardCoverFile, userInfo) => {
   } catch (error) { throw error }
 }
 
+const deleteItem = async (cardId) => {
+  try {
+    const targetCard = await cardModel.findOneById(cardId)
+    if (!targetCard) {
+      throw new ApiError(StatusCodes.NOT_FOUND, 'Card not found!: cardService ~ deleteItem')
+    }
+
+    // Xóa Card trong collection cards
+    await cardModel.deleteOneById(cardId)
+
+    // Xóa cardId trong cardOrderIds của column chứa nó
+    await columnModel.pullCardOrderIds(targetCard)
+
+
+    return { deleteResult: 'Card had been deleted successfully!' } // dòng này hiển thị ra cho người dùng
+  } catch (error) { throw error }
+}
+
 export const cardService = {
   createNew,
-  update
+  update,
+  deleteItem
 }
