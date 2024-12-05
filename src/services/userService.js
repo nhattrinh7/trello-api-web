@@ -162,13 +162,69 @@ const update = async (userId, reqBody, userAvatarFile) => {
       // console.log('uploadResult: ', uploadResult)
 
       // Lưu lại url (secure_url) của cái file ảnh vào trong Database
-      updatedUser = await userModel.update(existUser._id, {
-        avatar: uploadResult.secure_url
-      })
+      updatedUser = await userModel.update(existUser._id, { avatar: uploadResult.secure_url })
     } else {
       // Trường hợp update các thông tin chung, ví dụ như displayName
       updatedUser = await userModel.update(existUser._id, reqBody)
     }
+
+    return pickUser(updatedUser)
+  } catch (error) { throw error }
+}
+
+const resetPassword = async (reqBody) => {
+  try {
+    // Kiểm tra email đã tồn tại trong hệ thống chưa
+    const existUser = await userModel.findOneByEmail(reqBody.email)
+    if (!existUser) {
+      throw new ApiError(StatusCodes.CONFLICT, 'Email does not exist!' )
+    }
+
+    const updateData = {
+      verifyToken: uuidv4()
+    }
+
+    // update thông tin user vào Database
+    const updatedUser = await userModel.update(existUser._id, updateData)
+    // console.log(updatedUser)
+
+    // Gửi Email cho người dùng xác thực tài khoản
+    const ressetLink = `${WEBSITE_DOMAIN}/account/reset?email=${updatedUser.email}&token=${updatedUser.verifyToken}`
+    const customSubject = 'Trello: CLick the link to reset your password!'
+    const htmlContent = `
+      <h3>Here is your reset link:</h3>
+      <h3>${ressetLink}</h3>
+      <h3>Sincerely,<br/> - Trello Team - </h3>
+    `
+    // Gọi tới cái Provider gửi mail
+    await BrevoProvider.sendEmail(updatedUser.email, customSubject, htmlContent)
+
+
+    // return trả về dữ liệu cho Controller, không trả về hashed password và verifyToken
+    return pickUser(updatedUser)
+  } catch (error) {
+    // console.log(error)
+    throw error
+  }
+}
+
+const createNewPassword = async (reqBody) => {
+  try {
+    // Query user trong Database
+    const existUser = await userModel.findOneByEmail(reqBody.email)
+
+    // Các bước kiểm tra cần thiết
+    if (reqBody.token !== existUser.verifyToken) {
+      throw new ApiError(StatusCodes.NOT_ACCEPTABLE, 'Token is invalid!')
+    }
+
+    // Nếu như mọi thứ ok thì chúng ta bắt đầu update lại thông tin của thằng user để verify account
+    const updateData = {
+      verifyToken: null,
+      password: bcryptjs.hashSync(reqBody.password, 8)
+    }
+    // Thực hiện update thông tin user
+    const updatedUser = await userModel.update(existUser._id, updateData)
 
     return pickUser(updatedUser)
   } catch (error) { throw error }
@@ -179,5 +235,7 @@ export const userService = {
   verifyAccount,
   login,
   refreshToken,
-  update
+  update,
+  resetPassword,
+  createNewPassword
 }
