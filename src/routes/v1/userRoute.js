@@ -7,6 +7,12 @@ import { multerUploadMiddleware } from '~/middlewares/multerUploadMiddlware'
 
 const Router = express.Router()
 
+Router.route('/forget_password')
+  .put(userValidation.resetPassword, userController.resetPassword)
+
+Router.route('/create_new_password')
+  .put(userValidation.createNewPassword, userController.createNewPassword)
+
 Router.route('/register')
   .post(userValidation.createNew, userController.createNew)
 

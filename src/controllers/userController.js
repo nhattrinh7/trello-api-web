@@ -69,6 +69,21 @@ const update = async (req, res, next) => {
   } catch (error) { next(error) }
 }
 
+const resetPassword = async (req, res, next) => {
+  try {
+    const createdUser = await userService.resetPassword(req.body)
+
+    res.status(StatusCodes.OK).json(createdUser)
+  } catch (error) { next(error) }
+}
+
+const createNewPassword = async (req, res, next) => {
+  try {
+    const result = await userService.createNewPassword(req.body)
+    res.status(StatusCodes.OK).json(result)
+  } catch (error) { next(error) }
+}
+
 
 export const userController = {
   createNew,
@@ -76,5 +91,7 @@ export const userController = {
   login,
   logout,
   refreshToken,
-  update
+  update,
+  resetPassword,
+  createNewPassword
 }
