@@ -1,4 +1,4 @@
-  import { slugify } from '~/utils/formatters'
+import { slugify } from '~/utils/formatters'
 import { boardModel } from '~/models/boardModel'
 import { columnModel } from '~/models/columnModel'
 import { cardModel } from '~/models/cardModel'

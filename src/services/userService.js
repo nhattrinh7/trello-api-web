@@ -170,6 +170,9 @@ const update = async (userId, userEmail, reqBody, userAvatarFile) => {
     } else {
       // Trường hợp update các thông tin chung, ví dụ như displayName
       updatedUser = await userModel.update(existUser._id, reqBody)
+
+      // update cả displayName trong các comment cũ của user
+      await cardModel.updateAvatarUserDisplayName(userEmail, reqBody.displayName)
     }
 
     return pickUser(updatedUser)

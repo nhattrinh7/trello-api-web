@@ -95,6 +95,18 @@ const updateAvatarUserComment = async (userEmail, avatarUrl) => {
   } catch (error) { throw new Error(error) }
 }
 
+const updateAvatarUserDisplayName = async (userEmail, newDisplayname) => {
+  try {
+    const result = await GET_DB().collection(CARD_COLLECTION_NAME).updateMany(
+      {},
+      { $set: { 'comments.$[comment].userDisplayName': newDisplayname } },
+      { arrayFilters: [{ 'comment.userEmail': userEmail }] }
+    )
+
+    return result
+  } catch (error) { throw new Error(error) }
+}
+
 const deleteManyByColumnId = async (columnId) => {
   try {
     const result = await GET_DB().collection(CARD_COLLECTION_NAME).deleteMany({
@@ -170,5 +182,6 @@ export const cardModel = {
   unshiftNewComment,
   updateMembers,
   deleteOneById,
-  updateAvatarUserComment
+  updateAvatarUserComment,
+  updateAvatarUserDisplayName
 }
