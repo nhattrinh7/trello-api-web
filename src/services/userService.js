@@ -9,6 +9,7 @@ import { BrevoProvider } from '~/providers/BrevoProvider'
 import { JwtProvider } from '~/providers/JwtProvider'
 import { env } from '~/config/environment'
 import { CloudinaryProvider } from '~/providers/CloudinaryProvider'
+import { cardModel } from '~/models/cardModel'
 
 
 const createNew = async (reqBody) => {
@@ -137,7 +138,7 @@ const refreshToken = async (refreshToken) => {
   } catch (error) { throw error }
 }
 
-const update = async (userId, reqBody, userAvatarFile) => {
+const update = async (userId, userEmail, reqBody, userAvatarFile) => {
   try {
     // Query User và kiểm tra cho chắc chắn
     const existUser = await userModel.findOneById(userId)
@@ -159,6 +160,9 @@ const update = async (userId, reqBody, userAvatarFile) => {
     } else if (userAvatarFile) {
       // Trường hợp upload file lên Cloud Storage, cụ thể là Cloudinary
       const uploadResult = await CloudinaryProvider.streamUpload(userAvatarFile.buffer, 'users')
+      // update cả cái userAvatar trong comment của card nữa
+      await cardModel.updateAvatarUserComment(userEmail, uploadResult.secure_url)
+
       // console.log('uploadResult: ', uploadResult)
 
       // Lưu lại url (secure_url) của cái file ảnh vào trong Database
