@@ -150,7 +150,7 @@ const update = async (boardId, updateData) => {
       }
     })
 
-    // Những dữ liệu lien quan ObjectId thì biến đổi ở đây
+    // Những dữ liệu liên quan ObjectId thì biến đổi ở đây
     if (updateData.columnOrderIds) {
       updateData.columnOrderIds = updateData.columnOrderIds.map(_id => (new ObjectId(String(_id))))
     }
@@ -231,6 +231,14 @@ const pushMemberIds = async (boardId, userId) => {
   } catch (error) { throw new Error(error) }
 }
 
+const deleteOneById = async (id) => {
+  try {
+    const result = await GET_DB().collection(BOARD_COLLECTION_NAME).deleteOne({ _id: new ObjectId(String(id)) })
+
+    return result
+  } catch (error) { throw new Error(error) }
+}
+
 export const boardModel = {
   BOARD_COLLECTION_NAME,
   BOARD_COLLECTION_SCHEMA,
@@ -241,5 +249,6 @@ export const boardModel = {
   update,
   pullColumnOrderIds,
   getBoards,
-  pushMemberIds
+  pushMemberIds,
+  deleteOneById
 }
