@@ -59,9 +59,27 @@ const deleteItem = async (columnId) => {
   } catch (error) { throw error }
 }
 
+// Hàm này giống hàm ở trên dùng để xóa column và tất cả card trong column nhưng ko xóa columnId trong columnOrderIds trong Board vì hàm này dùng trong tính năng xóa Board
+const deleteColumnAndCards = async (columnId) => {
+  try {
+    const targetColumn = await columnModel.findOneById(columnId)
+
+    if (!targetColumn) {
+      throw new ApiError(StatusCodes.NOT_FOUND, 'Column not found!: columnService ~ deleteColumnAndCards')
+    }
+    // Xóa Column
+    await columnModel.deleteOneById(columnId)
+
+    // Xóa toàn bộ Card của Column
+    await cardModel.deleteManyByColumnId(columnId)
+
+  } catch (error) { throw error }
+}
+
 
 export const columnService = {
   createNew,
   update,
-  deleteItem
+  deleteItem,
+  deleteColumnAndCards
 }

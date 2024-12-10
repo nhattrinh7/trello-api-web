@@ -6,6 +6,7 @@ import ApiError from '~/utils/ApiError'
 import { StatusCodes } from 'http-status-codes'
 import { cloneDeep } from 'lodash'
 import { DEFAULT_PAGE, DEFAULT_ITEMS_PER_PAGE } from '~/utils/constants'
+import { columnService } from './columnService'
 
 
 const createNew = async (userId, reqBody) => {
@@ -104,10 +105,34 @@ const getBoards = async (userId, page, itemsPerPage, queryFilters) => {
   } catch (error) { throw error }
 }
 
+const deleteBoard = async (boardId) => {
+  try {
+    const targetBoard = await boardModel.findOneById(boardId)
+
+    if (!targetBoard) {
+      throw new ApiError(StatusCodes.NOT_FOUND, 'Board not found!: boardService ~ deleteBoard')
+    }
+    // Xóa Board
+    await boardModel.deleteOneById(boardId)
+
+    // Xóa toàn bộ Card
+    targetBoard.columnOrderIds.forEach(columnId => {
+      columnService.deleteColumnAndCards(String(columnId))
+    })
+
+    // Xóa toàn bộ Column của Board
+    await columnModel.deleteManyByBoardId(boardId)
+
+
+    return { deleteResult: 'Board and its content had been deleted successfully!' } // dòng này hiển thị ra cho người dùng
+  } catch (error) { throw error }
+}
+
 export const boardService = {
   createNew,
   getDetails,
   update,
   moveCardToDifferentColumn,
-  getBoards
+  getBoards,
+  deleteBoard
 }
