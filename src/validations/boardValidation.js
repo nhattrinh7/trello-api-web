@@ -1,8 +1,9 @@
 import Joi from 'joi'
 import { StatusCodes } from 'http-status-codes'
 import ApiError from '~/utils/ApiError'
-import { BOARD_TYPES } from '~/utils/constants'
-import { OBJECT_ID_RULE, OBJECT_ID_RULE_MESSAGE } from '~/utils/validators'
+import { BOARD_TYPES, APPOINT_TYPES } from '~/utils/constants'
+import { OBJECT_ID_RULE, OBJECT_ID_RULE_MESSAGE, EMAIL_RULE, EMAIL_RULE_MESSAGE } from '~/utils/validators'
+
 
 const createNew = async (req, res, next) => {
   /**
@@ -37,7 +38,6 @@ const createNew = async (req, res, next) => {
 }
 
 const update = async (req, res, next) => {
-
   const correctCondition = Joi.object({
     // cập nhật thì không có required()
     title: Joi.string().min(3).max(50).trim().strict().messages(),
@@ -45,7 +45,9 @@ const update = async (req, res, next) => {
     type: Joi.string().valid(...Object.values(BOARD_TYPES)),
     columnOrderIds: Joi.array().items(
       Joi.string().pattern(OBJECT_ID_RULE).message(OBJECT_ID_RULE_MESSAGE)
-    )
+    ),
+    appointeeEmail: Joi.string().pattern(EMAIL_RULE).message(EMAIL_RULE_MESSAGE),
+    appointType: Joi.string().valid(...Object.values(APPOINT_TYPES))
   })
 
   try {

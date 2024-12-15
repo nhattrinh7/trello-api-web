@@ -7,6 +7,7 @@ import { StatusCodes } from 'http-status-codes'
 import { cloneDeep } from 'lodash'
 import { DEFAULT_PAGE, DEFAULT_ITEMS_PER_PAGE } from '~/utils/constants'
 import { columnService } from './columnService'
+import { userModel } from '~/models/userModel'
 
 
 const createNew = async (userId, reqBody) => {
@@ -57,10 +58,48 @@ const getDetails = async (userId, boardId) => {
 
 const update = async (boardId, reqBody) => {
   try {
+    // nếu có appointeeEmail tức là hàm update chạy đúng trường hợp Appoint user thì mới chạy đoạn code sau:
+    if (reqBody.appointeeEmail !== undefined) {
+      const board = await boardModel.findOneById(boardId)
+      const userIds = board.ownerIds.concat(board.memberIds).map(_id => _id.toString())
+
+      // Lấy ra thông tin của user mà mình Appoint, mục đích để lấy _id của user đó
+      const appointedUser = await userModel.findOneByEmail(reqBody.appointeeEmail)
+      if (!appointedUser) return { result: 'This user is not a Trello user yet!' }
+
+      if (!userIds.includes(appointedUser._id.toString())) {
+        // thông báo cho là người này chưa là thành viên của Board
+        return { result: 'User is not in this board yet!' }
+      } else {
+        // chạy vào đây tức đã là thành viên của board rồi
+        let role
+        const ownerIdsStringArray = board.ownerIds.map(_id => _id.toString())
+        ownerIdsStringArray.includes(appointedUser._id.toString()) ? role = 'owner' : role = 'member'
+
+        if (reqBody.appointType === role) {
+          // thông báo user này đang là owner hoặc member rồi
+          return { result: `User is already a ${role}!` }
+
+        } else if (role === 'owner') {
+          // nếu đang là owner thì chuyển thành member
+          boardModel.pullOwnerIds(boardId, appointedUser._id)
+          boardModel.pushMemberIds(boardId, appointedUser._id)
+          return { result: 'Successfully, User is a member now!' }
+
+        } else {
+          // nếu đang là member thì chuyển thành owner
+          boardModel.pullMemberIds(boardId, appointedUser._id)
+          boardModel.pushOwnerIds(boardId, appointedUser._id)
+          return { result: 'Successfully, User is a owner now!' }
+        }
+      }
+    }
+
     const updateData = {
       ...reqBody,
       updatedAt: Date.now()
     }
+
     const updatedBoard = await boardModel.update(boardId, updateData)
 
     return updatedBoard

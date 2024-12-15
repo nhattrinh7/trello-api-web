@@ -1,4 +1,4 @@
-import { ExportWebhooksHistory } from '@getbrevo/brevo'
+
 import { env } from '~/config/environment'
 
 // những Domain được phép truy cập tới server này
@@ -10,6 +10,11 @@ export const WHITELIST_DOMAINS = [
 export const BOARD_TYPES = {
   PUBLIC: 'public',
   PRIVATE: 'private'
+}
+
+export const APPOINT_TYPES = {
+  OWNER: 'owner',
+  MEMBER: 'member'
 }
 
 export const WEBSITE_DOMAIN = (env.BUILD_MODE === 'production') ? env.WEBSITE_DOMAIN_PRODUCTION : env.WEBSITE_DOMAIN_DEVELOPMENT

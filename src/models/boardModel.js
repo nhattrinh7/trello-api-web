@@ -21,6 +21,8 @@ const BOARD_COLLECTION_SCHEMA = Joi.object({
     Joi.string().pattern(OBJECT_ID_RULE).message(OBJECT_ID_RULE_MESSAGE)
   ).default([]),
 
+  defaultOwnerId: Joi.string().pattern(OBJECT_ID_RULE).message(OBJECT_ID_RULE_MESSAGE),
+
   ownerIds: Joi.array().items(
     Joi.string().pattern(OBJECT_ID_RULE).message(OBJECT_ID_RULE_MESSAGE)
   ).default([]),
@@ -47,7 +49,8 @@ const createNew = async (userId, data) => {
     const validData = await validateBeforeCreate(data)
     const newBoardToAdd = {
       ...validData,
-      ownerIds: [new ObjectId(String(userId))]
+      ownerIds: [new ObjectId(String(userId))],
+      defaultOwnerId: new ObjectId(String(userId))
     }
     const createdBoard = await GET_DB().collection(BOARD_COLLECTION_NAME).insertOne(newBoardToAdd)
 
@@ -230,6 +233,38 @@ const pushMemberIds = async (boardId, userId) => {
     return result
   } catch (error) { throw new Error(error) }
 }
+const pullMemberIds = async (boardId, userId) => {
+  try {
+    const result = await GET_DB().collection(BOARD_COLLECTION_NAME).findOneAndUpdate(
+      { _id: new ObjectId(String(boardId)) },
+      { $pull: { memberIds: new ObjectId(String(userId)) } },
+      { returnDocument: 'after' }
+    )
+    return result
+  } catch (error) { throw new Error(error) }
+}
+
+const pushOwnerIds = async (boardId, userId) => {
+  try {
+    const result = await GET_DB().collection(BOARD_COLLECTION_NAME).findOneAndUpdate(
+      { _id: new ObjectId(String(boardId)) },
+      { $push: { ownerIds: new ObjectId(String(userId)) } },
+      { returnDocument: 'after' }
+    )
+    return result
+  } catch (error) { throw new Error(error) }
+}
+
+const pullOwnerIds = async (boardId, userId) => {
+  try {
+    const result = await GET_DB().collection(BOARD_COLLECTION_NAME).findOneAndUpdate(
+      { _id: new ObjectId(String(boardId)) },
+      { $pull: { ownerIds: new ObjectId(String(userId)) } },
+      { returnDocument: 'after' }
+    )
+    return result
+  } catch (error) { throw new Error(error) }
+}
 
 const deleteOneById = async (id) => {
   try {
@@ -249,6 +284,9 @@ export const boardModel = {
   update,
   pullColumnOrderIds,
   getBoards,
+  deleteOneById,
   pushMemberIds,
-  deleteOneById
+  pushOwnerIds,
+  pullMemberIds,
+  pullOwnerIds
 }
