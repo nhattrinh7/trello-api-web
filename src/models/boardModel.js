@@ -157,6 +157,9 @@ const update = async (boardId, updateData) => {
     if (updateData.columnOrderIds) {
       updateData.columnOrderIds = updateData.columnOrderIds.map(_id => (new ObjectId(String(_id))))
     }
+    if (updateData.defaultOwnerId) {
+      updateData.defaultOwnerId = new ObjectId(String(updateData.defaultOwnerId))
+    }
 
     const result = await GET_DB().collection(BOARD_COLLECTION_NAME).findOneAndUpdate(
       { _id: new ObjectId(String(boardId)) },
