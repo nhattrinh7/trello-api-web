@@ -48,7 +48,9 @@ const update = async (req, res, next) => {
     ),
     appointeeEmail: Joi.string().pattern(EMAIL_RULE).message(EMAIL_RULE_MESSAGE),
     appointType: Joi.string().valid(...Object.values(APPOINT_TYPES)),
-    leaveMessage: Joi.string()
+    leaveMessage: Joi.string(),
+    specifiedUserId: Joi.string().pattern(OBJECT_ID_RULE).message(OBJECT_ID_RULE_MESSAGE),
+    kickUserId: Joi.string().pattern(OBJECT_ID_RULE).message(OBJECT_ID_RULE_MESSAGE)
   })
 
   try {

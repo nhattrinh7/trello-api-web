@@ -123,8 +123,25 @@ const update = async (boardId, userId, reqBody) => {
         // Cho user được chỉ định làm DefaultOwner mới
         boardModel.update(boardId, { defaultOwnerId: reqBody.specifiedUserId })
       }
-
       return { result: 'Leave board successfully!' }
+    }
+
+    // Kick user ra khỏi board
+    if (reqBody.kickUserId) {
+      const board = await boardModel.findOneById(boardId)
+      const ownerIdsString = board.ownerIds.map(_id => _id.toString())
+      let role
+      ownerIdsString.includes(reqBody.kickUserId) ? role = 'owner' : role = 'member'
+      if (role === 'member') {
+        await boardModel.pullMemberIds(boardId, reqBody.kickUserId)
+      } else {
+        await boardModel.pullOwnerIds(boardId, reqBody.kickUserId)
+      }
+
+      // sau khi update xong thì get về board đã được cập nhật rồi ở component set lại board với dữ liệu mới
+      // nếu ko sẽ bị quay tròn Loading board...
+      const newBoard = await boardModel.findOneById(boardId)
+      return newBoard
     }
 
     const updateData = {
