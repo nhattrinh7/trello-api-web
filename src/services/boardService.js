@@ -56,7 +56,7 @@ const getDetails = async (userId, boardId) => {
   } catch (error) { throw error }
 }
 
-const update = async (boardId, reqBody) => {
+const update = async (boardId, userId, reqBody) => {
   try {
     // nếu có appointeeEmail tức là hàm update chạy đúng trường hợp Appoint user thì mới chạy đoạn code sau:
     if (reqBody.appointeeEmail !== undefined) {
@@ -93,6 +93,38 @@ const update = async (boardId, reqBody) => {
           return { result: 'Successfully, User is a owner now!' }
         }
       }
+    }
+
+    // NormalLeaveBoard & DefaultOwnerLeaveBoard
+    if (reqBody.leaveMessage || reqBody.specifiedUserId) {
+      // console.log(reqBody.leaveMessage)
+      const board = await boardModel.findOneById(boardId)
+      const ownerIdsString = board.ownerIds.map(_id => _id.toString())
+
+      // User muốn rời board rời board -  mấy dòng này dùng chung
+      let role
+      ownerIdsString.includes(userId) ? role = 'owner' : role = 'member'
+      if (role === 'owner') {
+        boardModel.pullOwnerIds(boardId, userId)
+      } else {
+        boardModel.pullMemberIds(boardId, userId)
+      }
+
+      // Còn đây là trường hợp DefaultOwner rời board thì:
+      if (reqBody.specifiedUserId) {
+        // xóa DefaultOwner mới đang là member thì xóa _id khỏi memberIds và thêm vào ownerIds
+        // đang là owner thì giữ nguyên
+        let role
+        ownerIdsString.includes(reqBody.specifiedUserId) ? role = 'owner' : role = 'member'
+        if (role === 'member') {
+          boardModel.pullMemberIds(boardId, reqBody.specifiedUserId)
+          boardModel.pushOwnerIds(boardId, reqBody.specifiedUserId)
+        }
+        // Cho user được chỉ định làm DefaultOwner mới
+        boardModel.update(boardId, { defaultOwnerId: reqBody.specifiedUserId })
+      }
+
+      return { result: 'Leave board successfully!' }
     }
 
     const updateData = {
