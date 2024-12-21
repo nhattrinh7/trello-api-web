@@ -2,7 +2,7 @@ import Joi from 'joi'
 import { ObjectId } from 'mongodb'
 import { GET_DB } from '~/config/mongodb'
 import { OBJECT_ID_RULE, OBJECT_ID_RULE_MESSAGE } from '~/utils/validators'
-import { INVITATION_TYPES, BOARD_INVITATION_STATUS } from '~/utils/constants'
+import { INVITATION_TYPES, BOARD_INVITATION_STATUS, BOARD_ALLOW_STATUS } from '~/utils/constants'
 import { userModel } from '~/models/userModel'
 import { boardModel } from '~/models/boardModel'
 
@@ -19,6 +19,8 @@ const INVITATION_COLLECTION_SCHEMA = Joi.object({
     boardId: Joi.string().required().pattern(OBJECT_ID_RULE).message(OBJECT_ID_RULE_MESSAGE),
     status: Joi.string().required().valid(...Object.values(BOARD_INVITATION_STATUS))
   }).optional(),
+
+  isAllow: Joi.string().required().valid(...Object.values(BOARD_ALLOW_STATUS)),
 
   createdAt: Joi.date().timestamp('javascript').default(Date.now),
   updatedAt: Joi.date().timestamp('javascript').default(null),
@@ -41,11 +43,11 @@ const createNewBoardInvitation = async (data) => {
       inviterId: new ObjectId(String(validData.inviterId)),
       inviteeId: new ObjectId(String(validData.inviteeId))
     }
-    // Nếu tồn tại dữ liệu boardInvitation thì update cho cái boardId, update ở cấp 2 nên làm riêng ra, có cách gộp chung lại hay ko thì tinh sau giờ lười bỏ mẹ
+    // Nếu tồn tại dữ liệu boardInvitation thì update cho cái boardId, đây là update ở cấp 2 nên làm riêng ra, có cách gộp chung lại hay ko thì tinh sau giờ lười bỏ mẹ
     if (validData.boardInvitation) {
       newInvitationToAdd.boardInvitation = {
         ...validData.boardInvitation,
-        boardId: new ObjectId(String(validData.boardInvitation.boardId))
+        boardId: new ObjectId(String(validData.boardInvitation.boardId)) // cũng chỉ là để chuyển dạng String thành ObjectId mà lưu vào DB thôi
       }
     }
     // Gọi insert vào DB
@@ -92,7 +94,8 @@ const findByUser = async (userId) => {
   try {
     const queryConditions = [
       { inviteeId: new ObjectId(String(userId)) }, // Tìm theo inviteeId - người được mời - chính là người đang thực hiện request này
-      { _destroy: false }
+      { _destroy: false },
+      { isAllow: BOARD_ALLOW_STATUS.ALLOW }
     ]
 
     const results = await GET_DB().collection(INVITATION_COLLECTION_NAME).aggregate([
@@ -123,11 +126,49 @@ const findByUser = async (userId) => {
   } catch (error) { throw new Error(error) }
 }
 
+const findInvitationsByBoardId = async (boardId) => {
+  try {
+    const queryConditions = [
+      { type: INVITATION_TYPES.BOARD_INVITATION },
+      { 'boardInvitation.boardId': new ObjectId(String(boardId)) },
+      { 'boardInvitation.status': BOARD_INVITATION_STATUS.PENDING },
+      { isAllow: BOARD_ALLOW_STATUS.NOTALLOW }
+    ]
+    const results = await GET_DB().collection(INVITATION_COLLECTION_NAME).aggregate([
+      { $match: { $and: queryConditions } },
+      { $lookup: {
+        from: userModel.USER_COLLECTION_NAME,
+        localField: 'inviterId', // người đi mời
+        foreignField: '_id',
+        as: 'inviter',
+        pipeline: [{ $project: { 'password': 0, 'verifyToken': 0 } }]
+      } },
+      { $lookup: {
+        from: userModel.USER_COLLECTION_NAME,
+        localField: 'inviteeId', // người được mời
+        foreignField: '_id',
+        as: 'invitee',
+        pipeline: [{ $project: { 'password': 0, 'verifyToken': 0 } }]
+      } },
+      { $lookup: {
+        from: boardModel.BOARD_COLLECTION_NAME,
+        localField: 'boardInvitation.boardId', // thông tin của board
+        foreignField: '_id',
+        as: 'board'
+      } }
+    ]).toArray()
+    // console.log(results)
+
+    return results
+  } catch (error) { throw new Error(error) }
+}
+
 export const invitationModel = {
   INVITATION_COLLECTION_NAME,
   INVITATION_COLLECTION_SCHEMA,
   createNewBoardInvitation,
   findOneById,
   update,
-  findByUser
+  findByUser,
+  findInvitationsByBoardId
 }

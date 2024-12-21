@@ -65,6 +65,7 @@ const findOneById = async (id) => {
     const result = await GET_DB().collection(BOARD_COLLECTION_NAME).findOne({
       _id: new ObjectId(String(id))
     })
+
     return result
   } catch (error) { throw new Error(error) }
 }

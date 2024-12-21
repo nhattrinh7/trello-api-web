@@ -188,7 +188,8 @@ const resetPassword = async (reqBody) => {
     }
 
     const updateData = {
-      verifyToken: uuidv4()
+      verifyToken: uuidv4(),
+      tokenExpiredAt: Date.now() + 3 * 60 * 1000
     }
 
     // update thông tin user vào Database
@@ -217,23 +218,39 @@ const resetPassword = async (reqBody) => {
 
 const createNewPassword = async (reqBody) => {
   try {
-    // Query user trong Database
-    const existUser = await userModel.findOneByEmail(reqBody.email)
+    // Trường hợp submit form set lại password mới
+    if (reqBody.createNewPasswordMessage) {
+      // Query user trong Database
+      const existUser = await userModel.findOneByEmail(reqBody.email)
 
-    // Các bước kiểm tra cần thiết
-    if (reqBody.token !== existUser.verifyToken) {
-      throw new ApiError(StatusCodes.NOT_ACCEPTABLE, 'Token is invalid!')
+      // Các bước kiểm tra cần thiết
+      if (Date.now() > existUser.tokenExpiredAt) {
+        throw new ApiError(StatusCodes.NOT_ACCEPTABLE, 'Token is expired, have to click the link within 3 mins of receiving it !')
+      }
+      if (reqBody.token !== existUser.verifyToken) {
+        throw new ApiError(StatusCodes.NOT_ACCEPTABLE, 'Token is invalid!')
+      }
+
+      // Nếu như mọi thứ ok thì chúng ta bắt đầu update lại thông tin của thằng user để verify account
+      const updateData = {
+        verifyToken: null,
+        password: bcryptjs.hashSync(reqBody.password, 8)
+      }
+      // Thực hiện update thông tin user
+      const updatedUser = await userModel.update(existUser._id, updateData)
+
+      return pickUser(updatedUser)
     }
 
-    // Nếu như mọi thứ ok thì chúng ta bắt đầu update lại thông tin của thằng user để verify account
-    const updateData = {
-      verifyToken: null,
-      password: bcryptjs.hashSync(reqBody.password, 8)
-    }
-    // Thực hiện update thông tin user
-    const updatedUser = await userModel.update(existUser._id, updateData)
+    // Trường hợp check token hết hạn hay chưa khi nhấn vào link
+    if (reqBody.checkExpiredTokenMessage) {
+      const existUser = await userModel.findOneByEmail(reqBody.email)
 
-    return pickUser(updatedUser)
+      if (Date.now() > existUser.tokenExpiredAt) {
+        throw new ApiError(StatusCodes.NOT_ACCEPTABLE, 'Token is expired, have to click the link within 3 mins of receiving it !')
+      } else return {}
+    }
+
   } catch (error) { throw error }
 }
 
