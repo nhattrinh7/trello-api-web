@@ -50,7 +50,8 @@ const update = async (req, res, next) => {
     appointType: Joi.string().valid(...Object.values(APPOINT_TYPES)),
     leaveMessage: Joi.string(),
     specifiedUserId: Joi.string().pattern(OBJECT_ID_RULE).message(OBJECT_ID_RULE_MESSAGE),
-    kickUserId: Joi.string().pattern(OBJECT_ID_RULE).message(OBJECT_ID_RULE_MESSAGE)
+    kickUserId: Joi.string().pattern(OBJECT_ID_RULE).message(OBJECT_ID_RULE_MESSAGE),
+    color: Joi.string().trim().strict()
   })
 
   try {
