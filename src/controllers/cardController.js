@@ -23,8 +23,16 @@ const update = async (req, res, next) => {
 const deleteItem = async (req, res, next) => {
   try {
     const cardId = req.params.id
-    // console.log('req.params.id', req.params.id)
     const deletedCard = cardService.deleteItem(cardId)
+
+    res.status(StatusCodes.OK).json(deletedCard)
+  } catch (error) { next(error) }
+}
+
+const deleteCardCover = async (req, res, next) => {
+  try {
+    const cardId = req.params.id
+    const deletedCard = cardService.deleteCardCover(cardId)
 
     res.status(StatusCodes.OK).json(deletedCard)
   } catch (error) { next(error) }
@@ -33,5 +41,6 @@ const deleteItem = async (req, res, next) => {
 export const cardController = {
   createNew,
   update,
-  deleteItem
+  deleteItem,
+  deleteCardCover
 }

@@ -54,7 +54,6 @@ const update = async (cardId, reqBody, cardCoverFile, userInfo) => {
       updatedCard = await cardModel.update(cardId, updateData)
     }
 
-
     return updatedCard
   } catch (error) { throw error }
 }
@@ -65,20 +64,36 @@ const deleteItem = async (cardId) => {
     if (!targetCard) {
       throw new ApiError(StatusCodes.NOT_FOUND, 'Card not found!: cardService ~ deleteItem')
     }
-
     // Xóa Card trong collection cards
     await cardModel.deleteOneById(cardId)
 
     // Xóa cardId trong cardOrderIds của column chứa nó
     await columnModel.pullCardOrderIds(targetCard)
 
-
     return { deleteResult: 'Card had been deleted successfully!' } // dòng này hiển thị ra cho người dùng
+  } catch (error) { throw error }
+}
+
+const deleteCardCover = async (cardId) => {
+  try {
+    const targetCard = await cardModel.findOneById(cardId)
+    if (!targetCard) {
+      throw new ApiError(StatusCodes.NOT_FOUND, 'Card not found!: cardService ~ deleteItem')
+    }
+    // const cardToUpdate = {
+    //   ...targetCard,
+    //   cover: null
+    // }
+    // Cho trường cover = null
+    await cardModel.update(cardId, { cover: null })
+
+    return { deleteResult: 'Card cover had been deleted successfully!' }
   } catch (error) { throw error }
 }
 
 export const cardService = {
   createNew,
   update,
-  deleteItem
+  deleteItem,
+  deleteCardCover
 }

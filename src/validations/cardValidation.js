@@ -53,8 +53,21 @@ const deleteItem = async (req, res, next) => {
   } catch (error) {next(new ApiError(StatusCodes.UNPROCESSABLE_ENTITY, new Error(error).message))}
 }
 
+const deleteCardCover = async (req, res, next) => {
+  const correctCondition = Joi.object({
+    id: Joi.string().required().pattern(OBJECT_ID_RULE).message(OBJECT_ID_RULE_MESSAGE)
+  })
+
+  try {
+    await correctCondition.validateAsync(req.params)
+    next()
+
+  } catch (error) {next(new ApiError(StatusCodes.UNPROCESSABLE_ENTITY, new Error(error).message))}
+}
+
 export const cardValidation = {
   createNew,
   update,
-  deleteItem
+  deleteItem,
+  deleteCardCover
 }
