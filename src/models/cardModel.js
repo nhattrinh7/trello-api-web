@@ -12,6 +12,11 @@ const CARD_COLLECTION_SCHEMA = Joi.object({
   title: Joi.string().required().min(3).max(50).trim().strict(),
   description: Joi.string().optional(),
 
+  attachments: Joi.array().items({
+    url: Joi.string(),
+    name: Joi.string()
+  }).default([]),
+
   cover: Joi.string().default(null),
   memberIds: Joi.array().items( // ở đây chỉ có memberIds - tại sao nhỉ
     Joi.string().pattern(OBJECT_ID_RULE).message(OBJECT_ID_RULE_MESSAGE)
@@ -137,6 +142,27 @@ const unshiftNewComment = async (cardId, commentData) => {
   } catch (error) { throw new Error(error) }
 }
 
+const unshiftNewAttachments = async (cardId, updateData) => {
+  try {
+    Object.keys(updateData).forEach(fieldName => {
+      if (INVALID_UPDATE_FIELDS.includes(fieldName)) {
+        delete updateData[fieldName]
+      }
+    })
+
+    // Đối với những dữ liệu liên quan đên ObjectId, cần biến đổi dữ liệu ở đây
+    if (updateData.columnId) updateData.columnId = new ObjectId(String(updateData.columnId))
+
+    const result = await GET_DB().collection(CARD_COLLECTION_NAME).findOneAndUpdate(
+      { _id: new ObjectId(String(cardId)) },
+      { $push: { attachments: { $each: updateData, $position: 0 } } }, // updateData ở đây là 1 array rồi
+      { returnDocument: 'after' }
+    )
+
+    return result
+  } catch (error) { throw new Error(error) }
+}
+
 /**
 * Hàm này sẽ có nhiệm vụ xử lý cập nhật thêm hoặc xóa member khỏi card dựa theo Action
 * sẽ dùng $push để thêm hoặc $pull để loại bỏ ($pull trong mongodb để lấy một phần tử ra khỏi mảng rồi xóa nó đi)
@@ -183,5 +209,6 @@ export const cardModel = {
   updateMembers,
   deleteOneById,
   updateAvatarUserComment,
-  updateAvatarUserDisplayName
+  updateAvatarUserDisplayName,
+  unshiftNewAttachments
 }

@@ -11,8 +11,10 @@ const createNewBoardInvitation = async (reqBody, inviterId) => {
   try {
     // Người đi mời: chính là người đang request, nên chúng ta tìm theo id lấy từ token
     const inviter = await userModel.findOneById(inviterId)
+
     // Người được mời: lấy theo email nhận từ phía FE
     const invitee = await userModel.findOneByEmail(reqBody.inviteeEmail)
+
     // Tìm luôn cái board ra để lấy data xử lý
     const board = await boardModel.findOneById(reqBody.boardId)
 
@@ -108,7 +110,7 @@ const getMemberInvitations = async (reqBody) => {
   // resInvitations lúc này chứa các lời mời của cả owner và member, giờ lọc ra chỉ lấy các lời mời mà inviter là member thôi
   // đầu tiên là query ra cái board hiện tại để lấy ra memberIds
   const board = await boardModel.findOneById(reqBody.boardId)
-  const memberIdsString = board.memberIds?.map(_id => _id.toString())
+  const memberIdsString = board?.memberIds?.map(_id => _id.toString())
   const finalInvitations = resInvitations.filter(invitation => memberIdsString.includes(invitation.inviterId.toString()))
 
   return finalInvitations

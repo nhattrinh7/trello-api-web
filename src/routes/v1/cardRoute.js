@@ -12,7 +12,7 @@ Router.route('/')
 Router.route('/:id')
   .put(
     authMiddleware.isAuthorized,
-    multerUploadMiddleware.upload.single('cardCover'),
+    multerUploadMiddleware.uploadCardFields,
     cardValidation.update,
     cardController.update)
   .delete(authMiddleware.isAuthorized, cardValidation.deleteItem, cardController.deleteItem)

@@ -140,6 +140,7 @@ const refreshToken = async (refreshToken) => {
 
 const update = async (userId, userEmail, reqBody, userAvatarFile) => {
   try {
+    console.log('userAvatarFile', userAvatarFile)
     // Query User và kiểm tra cho chắc chắn
     const existUser = await userModel.findOneById(userId)
     if (!existUser) throw new ApiError(StatusCodes.NOT_FOUND, 'Account not found!')

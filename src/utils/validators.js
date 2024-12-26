@@ -12,3 +12,10 @@ export const PASSWORD_CONFIRMATION_MESSAGE = 'Password Confirmation does not mat
 // Liên quan đến Validate File
 export const LIMIT_COMMON_FILE_SIZE = 10485760 // byte = 10 MB
 export const ALLOW_COMMON_FILE_TYPES = ['image/jpg', 'image/jpeg', 'image/png']
+
+// Liên quan đến Validate File attachments
+export const maxFileSize = 20 * 1024 * 1024 // byte = 20 MB
+export const allowedFileTypes = [
+  'image/jpg', 'image/jpeg', 'image/png',
+  'application/pdf'
+]

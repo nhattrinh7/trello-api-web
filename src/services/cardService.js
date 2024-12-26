@@ -25,7 +25,7 @@ const createNew = async (reqBody) => {
   } catch (error) { throw error }
 }
 
-const update = async (cardId, reqBody, cardCoverFile, userInfo) => {
+const update = async (cardId, reqBody, cardCoverFile, cardAttachments, userInfo) => {
   try {
     const updateData = {
       ...reqBody,
@@ -35,8 +35,27 @@ const update = async (cardId, reqBody, cardCoverFile, userInfo) => {
     let updatedCard = {}
 
     if (cardCoverFile) {
-      const uploadResult = await CloudinaryProvider.streamUpload(cardCoverFile.buffer, 'card-covers')
+      // dùng multer là upload.fields nên nó trả ra 1 object chứa 1 mảng, trong mảng là các dữ liệu đẩy lên, ko như upload.single
+      // là trả về 1 object của 1 file thôi, với uploadCardCover thì cái mình cần là 1 object cơ bản thôi, nên nếu ko biến đổi sẽ lỗi
+      const firstValue = Object.values(cardCoverFile)[0]
+      const cardCoverObject = firstValue[0]
+
+      const uploadResult = await CloudinaryProvider.streamUpload(cardCoverObject.buffer, 'card-covers')
       updatedCard = await cardModel.update(cardId, { cover: uploadResult.secure_url })
+
+    } else if (cardAttachments) {
+      // Khi có file attachments đính kèm
+      const attachments = cardAttachments.attachments
+      const attachmentsArray = []
+      for (const file of attachments) {
+        const uploadResult = await CloudinaryProvider.streamUploadAttachments(file.buffer, 'card-attachments')
+        attachmentsArray.push({
+          url: uploadResult.secure_url,
+          name: file.originalname
+        })
+      }
+      updatedCard = await cardModel.unshiftNewAttachments(cardId, attachmentsArray)
+
     } else if (updateData.commentToAdd) {
       // Tạo dữ liệu comment để thêm vào Database, cần bổ sung thêm những field cần thiết
       const commentData = {
@@ -48,6 +67,7 @@ const update = async (cardId, reqBody, cardCoverFile, userInfo) => {
       updatedCard = await cardModel.unshiftNewComment(cardId, commentData) // unshift là đẩy vào đầu của mảng, comment mới đẩy vào đầu luôn và sẽ được hiển thị trên đầu
     } else if (updateData.incomingMemberInfo) {
       // Trường hợp ADD hoặc REMOVE thành viên ra khỏi Card
+      // console.log(updateData.incomingMemberInfo)
       updatedCard = await cardModel.updateMembers(cardId, updateData.incomingMemberInfo)
     } else {
       // Các trường hợp update chung như title, description
@@ -80,11 +100,6 @@ const deleteCardCover = async (cardId) => {
     if (!targetCard) {
       throw new ApiError(StatusCodes.NOT_FOUND, 'Card not found!: cardService ~ deleteItem')
     }
-    // const cardToUpdate = {
-    //   ...targetCard,
-    //   cover: null
-    // }
-    // Cho trường cover = null
     await cardModel.update(cardId, { cover: null })
 
     return { deleteResult: 'Card cover had been deleted successfully!' }

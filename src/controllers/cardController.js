@@ -1,4 +1,5 @@
 import { StatusCodes } from 'http-status-codes'
+import { cloneDeep } from 'lodash'
 import { cardService } from '~/services/cardService'
 
 const createNew = async (req, res, next) => {
@@ -11,10 +12,23 @@ const createNew = async (req, res, next) => {
 
 const update = async (req, res, next) => {
   try {
+    const reqBody = cloneDeep(req.body)
     const cardId = req.params.id
-    const cardCoverFile = req.file
     const userInfo = req.jwtDecoded
-    const updatedCard = await cardService.update(cardId, req.body, cardCoverFile, userInfo)
+    let cardCoverFile
+    let cardAttachments
+    // Trường hợp Join/leave chỉ có req.body, không có req.files, cần if ở đây để tránh ko đụng đến req.files mà lại chạy
+    // cái đám code firstKey ở trong chúng nó tác động đến req.files thì cái req.body cũng sẽ bị tác động ảnh hưởng thành ra lỗi
+    if (req.files !== undefined) {
+      const firstKey = Object.keys(req.files)[0]
+      if (firstKey === 'cardCover') {
+        cardCoverFile = req.files
+      }
+      else if (firstKey === 'attachments') {
+        cardAttachments = req.files
+      }
+    }
+    const updatedCard = await cardService.update(cardId, reqBody, cardCoverFile, cardAttachments, userInfo)
 
     res.status(StatusCodes.OK).json(updatedCard)
   } catch (error) { next(error) }

@@ -1,5 +1,5 @@
 import multer from 'multer'
-import { LIMIT_COMMON_FILE_SIZE, ALLOW_COMMON_FILE_TYPES } from '~/utils/validators'
+import { maxFileSize, allowedFileTypes } from '~/utils/validators'
 import ApiError from '~/utils/ApiError'
 import { StatusCodes } from 'http-status-codes'
 
@@ -9,11 +9,9 @@ import { StatusCodes } from 'http-status-codes'
 
 // Function Kiểm tra loại file nào được chấp nhận - đây là func kiểm tra thôi
 const customFileFilter = (req, file, callback) => {
-  // console.log('Multer File: ', file)
-
   // Đối với thằng multer, kiểm tra kiểu file thì sử dụng mimetype
-  if (!ALLOW_COMMON_FILE_TYPES.includes(file.mimetype)) {
-    const errMessage = 'File type is invalid. Only accept jpg, jpeg and png'
+  if (!allowedFileTypes.includes(file.mimetype)) {
+    const errMessage = 'File type is invalid. Error in multerUploadMiddleware.js'
     return callback(new ApiError(StatusCodes.UNPROCESSABLE_ENTITY, errMessage), null)
   }
   // Nếu như kiểu file hợp lệ:
@@ -22,8 +20,14 @@ const customFileFilter = (req, file, callback) => {
 
 // Khởi tạo function upload được bọc bởi thằng multer - đây là func khởi tạo
 const upload = multer({
-  limits: { fileSize: LIMIT_COMMON_FILE_SIZE },
+  limits: { fileSize: maxFileSize },
   fileFilter: customFileFilter
 })
 
-export const multerUploadMiddleware = { upload }
+export const multerUploadMiddleware = {
+  uploadSingleAvatar: upload.single('avatar'),
+  uploadCardFields: upload.fields([
+    { name: 'cardCover', maxCount: 1 },
+    { name: 'attachments', maxCount: 10 }
+  ])
+}

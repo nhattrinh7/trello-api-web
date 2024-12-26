@@ -28,4 +28,16 @@ const streamUpload = (fileBuffer, folderName) => {
   })
 }
 
-export const CloudinaryProvider = { streamUpload }
+const streamUploadAttachments = (fileBuffer, folderName) => {
+  return new Promise((resolve, reject) => {
+    // Tạo một cái luồng stream upload lên cloudinary, folder: folderName chỉ định ta sẽ đẩy lên thư mục nào trên Cloudinary
+    const stream = cloudinaryV2.uploader.upload_stream({ folder: folderName, resource_type: 'raw' }, (err, result) => {
+      if (err) reject(err)
+      else resolve(result)
+    })
+    // Thực hiện upload cái luồng mình tạo phía trên bằng lib streamifier
+    streamifier.createReadStream(fileBuffer).pipe(stream)
+  })
+}
+
+export const CloudinaryProvider = { streamUpload, streamUploadAttachments }
