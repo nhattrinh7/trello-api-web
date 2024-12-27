@@ -51,7 +51,8 @@ const update = async (cardId, reqBody, cardCoverFile, cardAttachments, userInfo)
         const uploadResult = await CloudinaryProvider.streamUploadAttachments(file.buffer, 'card-attachments')
         attachmentsArray.push({
           url: uploadResult.secure_url,
-          name: file.originalname
+          name: file.originalname,
+          mimetype: file.mimetype
         })
       }
       updatedCard = await cardModel.unshiftNewAttachments(cardId, attachmentsArray)
@@ -69,6 +70,9 @@ const update = async (cardId, reqBody, cardCoverFile, cardAttachments, userInfo)
       // Trường hợp ADD hoặc REMOVE thành viên ra khỏi Card
       // console.log(updateData.incomingMemberInfo)
       updatedCard = await cardModel.updateMembers(cardId, updateData.incomingMemberInfo)
+    } else if (updateData.attachmentUrl) {
+      // Trường hợp xóa 1 attachment khỏi card
+      updatedCard = await cardModel.pullOneAttachment(cardId, updateData.attachmentUrl)
     } else {
       // Các trường hợp update chung như title, description
       updatedCard = await cardModel.update(cardId, updateData)

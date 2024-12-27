@@ -14,7 +14,8 @@ const CARD_COLLECTION_SCHEMA = Joi.object({
 
   attachments: Joi.array().items({
     url: Joi.string(),
-    name: Joi.string()
+    name: Joi.string(),
+    mimetype: Joi.string()
   }).default([]),
 
   cover: Joi.string().default(null),
@@ -186,6 +187,7 @@ const updateMembers = async (cardId, incomingMemberInfo) => {
       updateCondition, // truyền cái updateCondition ở đây
       { returnDocument: 'after' }
     )
+
     return result
   } catch (error) { throw new Error(error) }
 }
@@ -193,6 +195,18 @@ const updateMembers = async (cardId, incomingMemberInfo) => {
 const deleteOneById = async (id) => {
   try {
     const result = await GET_DB().collection(CARD_COLLECTION_NAME).deleteOne({ _id: new ObjectId(String(id)) })
+
+    return result
+  } catch (error) { throw new Error(error) }
+}
+
+const pullOneAttachment = async (cardId, attachmentUrl) => {
+  try {
+    const result = await GET_DB().collection(CARD_COLLECTION_NAME).findOneAndUpdate(
+      { _id: new ObjectId(String(cardId)) },
+      { $pull: { attachments: { url: attachmentUrl } } },
+      { returnDocument: 'after' }
+    )
 
     return result
   } catch (error) { throw new Error(error) }
@@ -210,5 +224,6 @@ export const cardModel = {
   deleteOneById,
   updateAvatarUserComment,
   updateAvatarUserDisplayName,
-  unshiftNewAttachments
+  unshiftNewAttachments,
+  pullOneAttachment
 }

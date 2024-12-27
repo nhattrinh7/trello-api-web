@@ -157,7 +157,6 @@ const findInvitationsByBoardId = async (boardId) => {
         as: 'board'
       } }
     ]).toArray()
-    // console.log(results)
 
     return results
   } catch (error) { throw new Error(error) }

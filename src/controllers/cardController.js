@@ -1,5 +1,4 @@
 import { StatusCodes } from 'http-status-codes'
-import { cloneDeep } from 'lodash'
 import { cardService } from '~/services/cardService'
 
 const createNew = async (req, res, next) => {
@@ -12,7 +11,6 @@ const createNew = async (req, res, next) => {
 
 const update = async (req, res, next) => {
   try {
-    const reqBody = cloneDeep(req.body)
     const cardId = req.params.id
     const userInfo = req.jwtDecoded
     let cardCoverFile
@@ -28,7 +26,7 @@ const update = async (req, res, next) => {
         cardAttachments = req.files
       }
     }
-    const updatedCard = await cardService.update(cardId, reqBody, cardCoverFile, cardAttachments, userInfo)
+    const updatedCard = await cardService.update(cardId, req.body, cardCoverFile, cardAttachments, userInfo)
 
     res.status(StatusCodes.OK).json(updatedCard)
   } catch (error) { next(error) }
