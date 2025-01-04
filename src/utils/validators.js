@@ -17,5 +17,7 @@ export const ALLOW_COMMON_FILE_TYPES = ['image/jpg', 'image/jpeg', 'image/png']
 export const maxFileSize = 20 * 1024 * 1024 // byte = 20 MB
 export const allowedFileTypes = [
   'image/jpg', 'image/jpeg', 'image/png',
-  'application/pdf'
+  'application/pdf',
+  'application/msword', // for .doc files
+  'application/vnd.openxmlformats-officedocument.wordprocessingml.document' // for .docx files
 ]
