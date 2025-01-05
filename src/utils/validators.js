@@ -19,5 +19,10 @@ export const allowedFileTypes = [
   'image/jpg', 'image/jpeg', 'image/png',
   'application/pdf',
   'application/msword', // for .doc files
-  'application/vnd.openxmlformats-officedocument.wordprocessingml.document' // for .docx files
+  'application/vnd.openxmlformats-officedocument.wordprocessingml.document', // for .docx files
+  'application/zip', // for .zip files
+  'application/x-zip-compressed', // for .zip files
+  'application/vnd.ms-powerpoint',
+  'application/vnd.openxmlformats-officedocument.presentationml.presentation',
+  'text/plain'
 ]
