@@ -50,7 +50,10 @@ const getBoards = async (req, res, next) => {
     // có trường hợp cho phép FE ko đẩy lên 2 giá trị này, bên Service sẽ phải có giá trị mặc định
     const { page, itemsPerPage, q } = req.query
     const queryFilters = q
-    // console.log(queryFilters)
+
+    console.log('page', page)
+    console.log('itemsPerPage', itemsPerPage)
+    console.log('queryFilters', queryFilters)
 
     // const results = await boardService.getBoards(userId, page, itemsPerPage)
     const results = await boardService.getBoards(userId, page, itemsPerPage, queryFilters)

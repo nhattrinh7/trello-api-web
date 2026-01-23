@@ -46,7 +46,6 @@ const createNew = async (reqBody) => {
     // Gọi tới cái Provider gửi mail
     await BrevoProvider.sendEmail(getNewUser.email, customSubject, htmlContent)
 
-
     // return trả về dữ liệu cho Controller, không trả về hashed password và verifyToken
     return pickUser(getNewUser)
   } catch (error) {
@@ -117,7 +116,7 @@ const login = async (reqBody) => {
 
 const refreshToken = async (refreshToken) => {
   try {
-    // Bước 01: Thực hiện giải mã refreshToken xem nó có hợp lệ hay là không
+    // Bước 01: Thực hiện giải mã refreshToken xem nó có hợp lệ hay là không, bao gồm cả việc hết hạn hay chưa
     const refreshTokenDecoded = await JwtProvider.verifyToken(
       refreshToken,
       env.REFRESH_TOKEN_SECRET_SIGNATURE
