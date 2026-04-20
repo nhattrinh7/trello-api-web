@@ -3,8 +3,9 @@ import { env } from '~/config/environment'
 
 // những Domain được phép truy cập tới server này
 export const WHITELIST_DOMAINS = [
-  'http://localhost:5173' // không có '/' ở cuối
+  // 'http://localhost:5173', // không có '/' ở cuối
   // sau này deploy lên domain chính thức thì sẽ có thêm ở đây
+  'https://trello-web-tqd-b7fi.vercel.app'
 ]
 
 export const BOARD_TYPES = {
