@@ -1,0 +1,65 @@
+name: Deploy Production
+
+on:
+  # push và pull_request lên nhánh main sẽ trigger workflow này
+  push: 
+    branches:
+      - main
+  pull_request:
+    branches:
+      - main
+  
+jobs:
+  # đầu tiên là build đã xem có ngon lành không
+  build:
+    # build trên môi trường ubuntu mới nhất
+    runs-on: ubuntu-latest
+    steps:
+      # Tải toàn bộ source code từ nhánh main về VPS này
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      # Cài đặt Nodejs trên VPS này và sử dụng npm làm trình quản lí package
+      - name: Set up Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '22.x'
+          cache: 'npm'
+      
+        # Tạo file .env chứa các biến môi trường bí mật. các biến môi trường này lấy từ phần
+        # Settings > Secrets and variables > Actions của repo GitHub
+      - name: Create .env file
+        run: echo "${{ secrets.ENV_PRODUCTION }}" > .env
+      - run: npm install
+      - run: npm run build
+  
+  # dự án thật thường có 1 job testing ở đây
+
+  deploy:
+    runs-on: ubuntu-latest
+    # build mà ko ok là ko chạy bước deploy này
+    needs: build
+    steps:
+      - name: Executing remote ssh commands using password
+        uses: appleboy/ssh-action@v1.2.0
+        with:
+          host: ${{ secrets.HOST_PRODUCTION }}
+          username: ${{ secrets.USERNAME_PRODUCTION }}
+          password: ${{ secrets.PASSWORD_PRODUCTION }}
+          # port này nếu ko chỉ định thì mặc định là 22
+          port: ${{ secrets.PORT_PRODUCTION }}
+          script: |
+            # cần lệnh export và source khi VPS của mình dùng nvm
+            export NVM_DIR=~/.nvm
+            source ~/.nvm/nvm.sh
+            cd /home/prod/trello-api-web
+            git fetch --all
+            git reset --hard origin/main
+            echo "${{ secrets.ENV_PRODUCTION }}" > .env
+            npm install
+            # nếu dùng prisma thì cần thêm lệnh npx prisma generate
+            # project này ko cần vì nó dùng MongoDB Nodejs Driver native
+            npm run build
+            pm2 restart trello-api-tqd
+
+     

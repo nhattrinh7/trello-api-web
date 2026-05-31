@@ -37,7 +37,7 @@ const createNew = async (reqBody) => {
 
     // Gửi Email cho người dùng xác thực tài khoản
     const verificationLink = `${WEBSITE_DOMAIN}/account/verification?email=${getNewUser.email}&token=${getNewUser.verifyToken}`
-    const customSubject = 'Trello: Please verify your email before using our services!'
+    const customSubject = 'Trello: Please verify your email before using our services!!!!'
     const htmlContent = `
       <h3>Here is your verification link:</h3>
       <h3>${verificationLink}</h3>
